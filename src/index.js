@@ -212,7 +212,7 @@ function SchedulePanel() {
 			<ToggleControl
 				label={ __( 'Enable scheduling', 'wp-pop' ) }
 				checked={ !! get( '_wp_pop_scheduling_enabled', false ) }
-				onChange={ set( '_wp_pop_scheduling_enabled' ) }
+				onChange={ ( v ) => set( '_wp_pop_scheduling_enabled' )( v ? 1 : 0 ) }
 			/>
 
 			{ !! get( '_wp_pop_scheduling_enabled' ) && (
@@ -343,7 +343,7 @@ function TriggerFrequencyPanel() {
 			<ToggleControl
 				label={ __( 'Test mode (always show for admins)', 'wp-pop' ) }
 				checked={ !! get( '_wp_pop_test_mode', false ) }
-				onChange={ set( '_wp_pop_test_mode' ) }
+				onChange={ ( v ) => set( '_wp_pop_test_mode' )( v ? 1 : 0 ) }
 			/>
 		</PluginDocumentSettingPanel>
 	);
@@ -398,7 +398,7 @@ function AppearancePanel() {
 			<ToggleControl
 				label={ __( 'Show overlay', 'wp-pop' ) }
 				checked={ !! get( '_wp_pop_overlay', true ) }
-				onChange={ set( '_wp_pop_overlay' ) }
+				onChange={ ( v ) => set( '_wp_pop_overlay' )( v ? 1 : 0 ) }
 			/>
 
 			{ !! get( '_wp_pop_overlay', true ) && (
@@ -427,7 +427,7 @@ function AppearancePanel() {
 			<ToggleControl
 				label={ __( 'Show close button', 'wp-pop' ) }
 				checked={ !! get( '_wp_pop_show_close_button', true ) }
-				onChange={ set( '_wp_pop_show_close_button' ) }
+				onChange={ ( v ) => set( '_wp_pop_show_close_button' )( v ? 1 : 0 ) }
 			/>
 
 			{ !! get( '_wp_pop_show_close_button', true ) && (
@@ -451,13 +451,13 @@ function AppearancePanel() {
 			<ToggleControl
 				label={ __( 'Close on outside click', 'wp-pop' ) }
 				checked={ !! get( '_wp_pop_close_on_outside_click', true ) }
-				onChange={ set( '_wp_pop_close_on_outside_click' ) }
+				onChange={ ( v ) => set( '_wp_pop_close_on_outside_click' )( v ? 1 : 0 ) }
 			/>
 
 			<ToggleControl
 				label={ __( 'Close with Escape key', 'wp-pop' ) }
 				checked={ !! get( '_wp_pop_close_on_esc', true ) }
-				onChange={ set( '_wp_pop_close_on_esc' ) }
+				onChange={ ( v ) => set( '_wp_pop_close_on_esc' )( v ? 1 : 0 ) }
 			/>
 		</PluginDocumentSettingPanel>
 	);
@@ -540,7 +540,7 @@ function GeoTargetingPanel() {
 			<ToggleControl
 				label={ __( 'Enable geo targeting', 'wp-pop' ) }
 				checked={ enabled }
-				onChange={ set( '_wp_pop_geo_enabled' ) }
+				onChange={ ( v ) => set( '_wp_pop_geo_enabled' )( v ? 1 : 0 ) }
 			/>
 
 			{ enabled && (

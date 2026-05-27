@@ -139,7 +139,7 @@ class Wp_Pop_Meta {
 		self::register_string(  '_wp_pop_overlay_color', '#000000',  $auth, 'sanitize_hex_color' );
 		self::register_number(  '_wp_pop_overlay_opacity', 0.65,     $auth );
 		self::register_integer( '_wp_pop_border_radius',       8,          $auth );
-		self::register_number(  '_wp_pop_padding',             2,          $auth );
+		self::register_string(  '_wp_pop_padding',             '20px',     $auth );
 		self::register_string(  '_wp_pop_close_color',         '#000000',  $auth, 'sanitize_hex_color' );
 		self::register_integer( '_wp_pop_hide_title',          0,          $auth );
 		self::register_number(  '_wp_pop_columns_gap',         2,          $auth );
