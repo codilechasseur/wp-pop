@@ -1,0 +1,15 @@
+{
+    "name": "codilechasseur/wp-pop",
+    "description": "Create and manage popups for your WordPress site — sitewide or page-specific, with flexible frequency controls.",
+    "type": "wordpress-plugin",
+    "version": "0.1.0",
+    "license": "GPL-2.0-or-later",
+    "authors": [
+        {
+            "name": "Codi Lechasseur"
+        }
+    ],
+    "require": {
+        "composer/installers": "^2.0"
+    }
+}

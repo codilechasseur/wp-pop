@@ -1,0 +1,222 @@
+/* ==========================================================================
+   WP Pop! — Public Styles
+   ========================================================================== */
+
+/* ---- Base / Shared -------------------------------------------------------- */
+
+.wp-pop {
+	--wp-pop-max-width: 600px;
+	--wp-pop-border-radius: 8px;
+	--wp-pop-dialog-padding: 2rem;
+	--wp-pop-close-color: #333;
+	--wp-pop-overlay-bg: rgba(0, 0, 0, 0.65);
+}
+
+/* <dialog> resets */
+.wp-pop__dialog {
+	position: relative;
+	width: calc(100vw - 3rem);
+	max-width: var(--wp-pop-max-width);
+	max-height: calc(100vh - 3rem);
+	overflow-y: auto;
+	padding: var(--wp-pop-dialog-padding);
+	background: #fff;
+	border: 0;
+	border-radius: var(--wp-pop-border-radius);
+	box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+}
+
+.wp-pop__dialog::backdrop {
+	background: var(--wp-pop-overlay-bg);
+}
+
+.wp-pop__inner {
+	position: relative;
+}
+
+.wp-pop__close {
+	position: absolute;
+	top: 0.5rem;
+	right: 0.5rem;
+	border: 0;
+	background: transparent;
+	font-size: 1.5rem;
+	line-height: 1;
+	cursor: pointer;
+	color: var(--wp-pop-close-color);
+	z-index: 1;
+	padding: 0.25rem 0.5rem;
+}
+
+.wp-pop__title {
+	margin-top: 0;
+}
+
+/* ---- Popup Types ---------------------------------------------------------- */
+
+/* Top bar */
+.wp-pop--top_bar .wp-pop__dialog,
+.wp-pop--top_bar dialog {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	max-width: 100%;
+	max-height: none;
+	border-radius: 0;
+	margin: 0;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Bottom bar */
+.wp-pop--bottom_bar .wp-pop__dialog,
+.wp-pop--bottom_bar dialog {
+	position: fixed;
+	bottom: 0;
+	left: 0;
+	width: 100%;
+	max-width: 100%;
+	max-height: none;
+	border-radius: 0;
+	margin: 0;
+	box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Slide-in positions */
+.wp-pop--slide_in_tl dialog,
+.wp-pop--slide_in_tr dialog,
+.wp-pop--slide_in_bl dialog,
+.wp-pop--slide_in_br dialog {
+	position: fixed;
+	margin: 1.5rem;
+	width: min(360px, calc(100vw - 3rem));
+	max-height: calc(100vh - 3rem);
+	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+.wp-pop--slide_in_tl dialog { top: 0; left: 0; }
+.wp-pop--slide_in_tr dialog { top: 0; right: 0; }
+.wp-pop--slide_in_bl dialog { bottom: 0; left: 0; }
+.wp-pop--slide_in_br dialog { bottom: 0; right: 0; }
+
+/* Fullscreen */
+.wp-pop--fullscreen dialog {
+	width: 100vw;
+	max-width: 100vw;
+	height: 100vh;
+	max-height: 100vh;
+	border-radius: 0;
+	margin: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+/* Tooltip / inline */
+.wp-pop--tooltip dialog {
+	position: relative;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* ---- Animations ----------------------------------------------------------- */
+
+/* Fade */
+@keyframes wpPopFadeIn {
+	from { opacity: 0; }
+	to   { opacity: 1; }
+}
+
+.wp-pop--anim-fade dialog[open] {
+	animation: wpPopFadeIn 0.25s ease;
+}
+
+/* Slide down */
+@keyframes wpPopSlideDown {
+	from { transform: translateY(-30px); opacity: 0; }
+	to   { transform: translateY(0);    opacity: 1; }
+}
+
+.wp-pop--anim-slide_down dialog[open] {
+	animation: wpPopSlideDown 0.3s ease;
+}
+
+/* Zoom */
+@keyframes wpPopZoom {
+	from { transform: scale(0.85); opacity: 0; }
+	to   { transform: scale(1);    opacity: 1; }
+}
+
+.wp-pop--anim-zoom dialog[open] {
+	animation: wpPopZoom 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* ---- Subscribe Form ------------------------------------------------------- */
+
+.wp-pop__subscribe {
+	margin-top: 1.25rem;
+}
+
+.wp-pop__subscribe-form {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+}
+
+.wp-pop__label {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+	font-size: 0.9rem;
+	font-weight: 500;
+}
+
+.wp-pop__input {
+	padding: 0.5rem 0.75rem;
+	border: 1px solid #ccd0d4;
+	border-radius: 4px;
+	font-size: 1rem;
+	width: 100%;
+}
+
+.wp-pop__input:focus {
+	outline: none;
+	border-color: #007cba;
+	box-shadow: 0 0 0 2px rgba(0, 124, 186, 0.25);
+}
+
+.wp-pop__subscribe-btn {
+	align-self: flex-start;
+}
+
+.wp-pop__subscribe-error {
+	color: #d63638;
+	font-size: 0.85rem;
+	margin: 0;
+}
+
+.wp-pop__subscribe-success {
+	font-size: 1rem;
+	font-weight: 600;
+	color: #1d2327;
+	margin: 1rem 0 0;
+}
+
+/* ---- Responsive ----------------------------------------------------------- */
+
+@media (max-width: 600px) {
+	.wp-pop__dialog {
+		width: calc(100vw - 1.5rem);
+		max-height: calc(100vh - 1.5rem);
+	}
+}
+
+/* ---- Legacy: Trigger button ----------------------------------------------- */
+
+.wp-pop__trigger {
+	padding: 0.75rem 1rem;
+	border: 0;
+	border-radius: 4px;
+	background: #2271b1;
+	color: #fff;
+	cursor: pointer;
+}

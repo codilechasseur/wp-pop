@@ -1,0 +1,143 @@
+.wp-pop-admin code {
+	display: inline-block;
+	padding: 0.5rem 0.75rem;
+	background: #fff;
+	border: 1px solid #ccd0d4;
+	border-radius: 4px;
+}
+
+.wp-pop-meta-box .description {
+	font-style: italic;
+	margin-top: 4px;
+}
+
+#wp-pop-specific-pages {
+	padding: 0.5rem;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+	max-height: 200px;
+	overflow-y: auto;
+	background: #fff;
+	margin-top: 0.5rem;
+}
+
+#wp-pop-specific-pages label {
+	display: block;
+	margin-bottom: 4px;
+}
+/* Schedule status badges */
+.wp-pop-badge {
+        display: inline-block;
+        padding: 1px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 600;
+        line-height: 1.8;
+        vertical-align: middle;
+}
+
+.wp-pop-badge--active    { background: #d4edda; color: #155724; }
+.wp-pop-badge--scheduled { background: #cce5ff; color: #004085; }
+.wp-pop-badge--expired   { background: #f8d7da; color: #721c24; }
+
+/* ---- Analytics Dashboard -------------------------------------------------- */
+
+.wp-pop-analytics h1 {
+	margin-bottom: 1.5rem;
+}
+
+.wp-pop-summary-cards {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 1rem;
+	margin-bottom: 2rem;
+}
+
+.wp-pop-card {
+	flex: 1 1 140px;
+	background: #fff;
+	border: 1px solid #c3c4c7;
+	border-top: 3px solid #c3c4c7;
+	border-radius: 4px;
+	padding: 1.25rem 1.5rem;
+	text-align: center;
+	box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+}
+
+.wp-pop-card--views   { border-top-color: #2271b1; }
+.wp-pop-card--clicks  { border-top-color: #00a32a; }
+.wp-pop-card--dismiss { border-top-color: #dba617; }
+.wp-pop-card--ctr     { border-top-color: #8c44ad; }
+.wp-pop-card--convert { border-top-color: #1da1a1; }
+
+.wp-pop-card__value {
+	display: block;
+	font-size: 2rem;
+	font-weight: 700;
+	line-height: 1.2;
+	color: #1d2327;
+}
+
+.wp-pop-card__label {
+	display: block;
+	font-size: 0.8rem;
+	color: #646970;
+	margin-top: 0.25rem;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+}
+
+.wp-pop-chart-section {
+	background: #fff;
+	border: 1px solid #c3c4c7;
+	border-radius: 4px;
+	padding: 1.5rem;
+	margin-bottom: 2rem;
+}
+
+.wp-pop-chart-controls {
+	margin-bottom: 1rem;
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	flex-wrap: wrap;
+}
+
+.wp-pop-chart-controls form {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	flex-wrap: wrap;
+}
+
+/* ---- Import / Export ------------------------------------------------------ */
+
+.wp-pop-import-export {
+	background: #fff;
+	border: 1px solid #c3c4c7;
+	border-radius: 4px;
+	padding: 1.5rem;
+	max-width: 600px;
+}
+
+.wp-pop-import-export h3 {
+	margin-top: 1.25rem;
+}
+
+.wp-pop-import-export h3:first-child {
+	margin-top: 0;
+}
+
+#wp-pop-import-status {
+	margin-left: 0.5rem;
+	font-style: italic;
+	color: #646970;
+}
+
+/* ---- Subscribers ---------------------------------------------------------- */
+
+.wp-pop-subscribers .tablenav-pages a.button {
+	margin: 0 1px;
+	min-width: 2rem;
+	text-align: center;
+}

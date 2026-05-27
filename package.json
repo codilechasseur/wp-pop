@@ -1,0 +1,15 @@
+{
+	"name": "wp-pop",
+	"version": "0.2.0",
+	"description": "WordPress popup plugin",
+	"scripts": {
+		"build": "wp-scripts build",
+		"start": "wp-scripts start",
+		"lint:js": "wp-scripts lint-js",
+		"format": "wp-scripts format"
+	},
+	"devDependencies": {
+		"@wordpress/scripts": "^30.0.0",
+		"chart.js": "^4.4.0"
+	}
+}

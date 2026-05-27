@@ -1,0 +1,30 @@
+.components-panel__body .components-base-control {
+	margin-bottom: 16px;
+}
+
+.components-panel__body .components-base-control:last-child {
+	margin-bottom: 0;
+}
+
+/* PanelRow (e.g. post-type fieldset) needs the same bottom gap */
+.components-panel__body .components-panel__row {
+	margin-bottom: 16px;
+	flex-direction: column;
+	align-items: flex-start;
+}
+
+/* Spacing between toggles inside the post-type fieldset */
+.components-panel__body .components-panel__row .components-base-control {
+	margin-bottom: 8px;
+}
+
+.components-panel__body .components-panel__row .components-base-control:last-child {
+	margin-bottom: 0;
+}
+
+/* hr separator */
+.components-panel__body hr {
+	margin: 12px 0;
+	border: none;
+	border-top: 1px solid #e0e0e0;
+}
