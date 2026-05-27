@@ -14,7 +14,7 @@
 
 /* <dialog> resets */
 .wp-pop__dialog {
-	position: relative;
+	margin: auto; /* centers the native <dialog> shown via showModal() */
 	width: calc(100vw - 3rem);
 	max-width: var(--wp-pop-max-width);
 	max-height: calc(100vh - 3rem);

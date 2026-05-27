@@ -47,23 +47,8 @@ class Wp_Pop_Meta {
 		);
 
 		// URL pattern targeting (one pattern per entry, e.g. "/shop/*").
-		register_post_meta(
-			'wp_pop',
-			'_wp_pop_target_url_patterns',
-			array(
-				'type'          => 'array',
-				'single'        => true,
-				'default'       => array(),
-				'show_in_rest'  => array(
-					'schema' => array(
-						'type'  => 'array',
-						'items' => array( 'type' => 'string' ),
-					),
-				),
-				'auth_callback'     => $auth,
-				'sanitize_callback' => array( __CLASS__, 'sanitize_string_array' ),
-			)
-		);
+		// Stored as a JSON string so the block editor's useEntityProp can read/write it.
+		self::register_json( '_wp_pop_url_patterns', '[]', $auth );
 
 		// Post-type slugs targeting.
 		register_post_meta(
@@ -106,28 +91,12 @@ class Wp_Pop_Meta {
 			)
 		);
 
-		self::register_string( '_wp_pop_target_device',        'all',         $auth );
-		self::register_string( '_wp_pop_target_visitor_type',  'all',         $auth );
-		self::register_string( '_wp_pop_target_logged_in',     'all',         $auth );
+		self::register_string( '_wp_pop_device',        'all', $auth );
+		self::register_string( '_wp_pop_visitor_type',  'all', $auth );
+		self::register_string( '_wp_pop_logged_in',     'all', $auth );
 
-		// WooCommerce page targeting (product, cart, checkout, shop).
-		register_post_meta(
-			'wp_pop',
-			'_wp_pop_target_wc_pages',
-			array(
-				'type'          => 'array',
-				'single'        => true,
-				'default'       => array(),
-				'show_in_rest'  => array(
-					'schema' => array(
-						'type'  => 'array',
-						'items' => array( 'type' => 'string' ),
-					),
-				),
-				'auth_callback'     => $auth,
-				'sanitize_callback' => array( __CLASS__, 'sanitize_string_array' ),
-			)
-		);
+		// WooCommerce page targeting (product, cart, checkout, shop) — single value.
+		self::register_string( '_wp_pop_wc_page', '', $auth );
 
 		// -----------------------------------------------------------------
 		// Scheduling
@@ -143,13 +112,13 @@ class Wp_Pop_Meta {
 		// Trigger
 		// -----------------------------------------------------------------
 
-		self::register_string(  '_wp_pop_trigger',                     'time', $auth );
-		self::register_integer( '_wp_pop_delay',                       0,      $auth );
-		self::register_integer( '_wp_pop_scroll_threshold',            50,     $auth );
-		self::register_string(  '_wp_pop_trigger_click_selector',      '',     $auth, 'sanitize_text_field' );
-		self::register_integer( '_wp_pop_trigger_inactivity_seconds',  30,     $auth );
-		self::register_string(  '_wp_pop_trigger_element_selector',    '',     $auth, 'sanitize_text_field' );
-		self::register_string(  '_wp_pop_wc_trigger',                  'none', $auth );
+		self::register_string(  '_wp_pop_trigger',           'time', $auth );
+		self::register_integer( '_wp_pop_trigger_delay',     0,      $auth );
+		self::register_integer( '_wp_pop_scroll_threshold',  50,     $auth );
+		self::register_string(  '_wp_pop_click_selector',    '',     $auth, 'sanitize_text_field' );
+		self::register_integer( '_wp_pop_inactivity_seconds', 30,    $auth );
+		self::register_string(  '_wp_pop_element_selector',  '',     $auth, 'sanitize_text_field' );
+		self::register_string(  '_wp_pop_wc_trigger',        'none', $auth );
 
 		// -----------------------------------------------------------------
 		// Frequency
@@ -164,11 +133,11 @@ class Wp_Pop_Meta {
 		// Appearance
 		// -----------------------------------------------------------------
 
-		self::register_string(  '_wp_pop_popup_type',          'modal',    $auth );
-		self::register_string(  '_wp_pop_width_preset',        'medium',   $auth );
-		self::register_number(  '_wp_pop_custom_width',        40,         $auth );
-		self::register_string(  '_wp_pop_overlay_color',       '#000000',  $auth, 'sanitize_hex_color' );
-		self::register_number(  '_wp_pop_overlay_opacity',     0.65,       $auth );
+		self::register_string(  '_wp_pop_popup_type',    'modal',    $auth );
+		self::register_string(  '_wp_pop_width',         '600px',    $auth );
+		self::register_integer( '_wp_pop_overlay',       1,          $auth );
+		self::register_string(  '_wp_pop_overlay_color', '#000000',  $auth, 'sanitize_hex_color' );
+		self::register_number(  '_wp_pop_overlay_opacity', 0.65,     $auth );
 		self::register_integer( '_wp_pop_border_radius',       8,          $auth );
 		self::register_number(  '_wp_pop_padding',             2,          $auth );
 		self::register_string(  '_wp_pop_close_color',         '#000000',  $auth, 'sanitize_hex_color' );

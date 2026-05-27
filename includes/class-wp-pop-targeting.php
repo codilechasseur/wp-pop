@@ -181,7 +181,10 @@ class Wp_Pop_Targeting {
 	}
 
 	private function check_url_patterns( $id ) {
-		$patterns = (array) get_post_meta( $id, '_wp_pop_target_url_patterns', true );
+		$patterns = json_decode( get_post_meta( $id, '_wp_pop_url_patterns', true ) ?: '[]', true );
+		if ( ! is_array( $patterns ) ) {
+			$patterns = array();
+		}
 		if ( empty( $patterns ) ) {
 			return true;
 		}
@@ -242,7 +245,7 @@ class Wp_Pop_Targeting {
 	}
 
 	private function check_logged_in( $id ) {
-		$setting = get_post_meta( $id, '_wp_pop_target_logged_in', true ) ?: 'all';
+		$setting = get_post_meta( $id, '_wp_pop_logged_in', true ) ?: 'all';
 
 		if ( 'all' === $setting ) {
 			return true;
@@ -278,7 +281,7 @@ class Wp_Pop_Targeting {
 	}
 
 	private function check_device( $id ) {
-		$device_setting = get_post_meta( $id, '_wp_pop_target_device', true ) ?: 'all';
+		$device_setting = get_post_meta( $id, '_wp_pop_device', true ) ?: 'all';
 		if ( 'all' === $device_setting ) {
 			return true;
 		}
@@ -305,25 +308,22 @@ class Wp_Pop_Targeting {
 			return true; // WC not active → rule not applicable.
 		}
 
-		$wc_pages = (array) get_post_meta( $id, '_wp_pop_target_wc_pages', true );
-		$wc_pages = array_filter( $wc_pages );
-		if ( empty( $wc_pages ) ) {
+		$wc_page = get_post_meta( $id, '_wp_pop_wc_page', true ) ?: '';
+		if ( empty( $wc_page ) ) {
 			return true; // No WC page restriction.
 		}
 
-		foreach ( $wc_pages as $page ) {
-			if ( 'shop' === $page && function_exists( 'is_shop' ) && is_shop() ) {
-				return true;
-			}
-			if ( 'product' === $page && function_exists( 'is_product' ) && is_product() ) {
-				return true;
-			}
-			if ( 'cart' === $page && function_exists( 'is_cart' ) && is_cart() ) {
-				return true;
-			}
-			if ( 'checkout' === $page && function_exists( 'is_checkout' ) && is_checkout() ) {
-				return true;
-			}
+		if ( 'shop' === $wc_page && function_exists( 'is_shop' ) && is_shop() ) {
+			return true;
+		}
+		if ( 'product' === $wc_page && function_exists( 'is_product' ) && is_product() ) {
+			return true;
+		}
+		if ( 'cart' === $wc_page && function_exists( 'is_cart' ) && is_cart() ) {
+			return true;
+		}
+		if ( 'checkout' === $wc_page && function_exists( 'is_checkout' ) && is_checkout() ) {
+			return true;
 		}
 
 		return false;
