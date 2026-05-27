@@ -23,6 +23,17 @@ class Wp_Pop_Public {
 	public function __construct( $plugin_name, $version ) {
 		$this->plugin_name = $plugin_name;
 		$this->version     = $version;
+
+		// Register core WordPress content processing on a dedicated filter.
+		// Popup content is run through wp_pop_popup_content instead of the_content
+		// so that theme/plugin ad injectors hooked onto the_content are never invoked.
+		add_filter( 'wp_pop_popup_content', 'do_blocks',              9  );
+		add_filter( 'wp_pop_popup_content', 'wptexturize'                );
+		add_filter( 'wp_pop_popup_content', 'convert_smilies',        20 );
+		add_filter( 'wp_pop_popup_content', 'wpautop'                    );
+		add_filter( 'wp_pop_popup_content', 'shortcode_unautop'          );
+		add_filter( 'wp_pop_popup_content', 'wp_filter_content_tags', 12 );
+		add_filter( 'wp_pop_popup_content', 'do_shortcode',           11 );
 	}
 
 	public function enqueue_styles() {
@@ -297,7 +308,7 @@ array(
 		);
 
 		$popup_element_id = 'wp-pop-' . $id;
-		$content          = apply_filters( 'the_content', $popup->post_content );
+		$content          = apply_filters( 'wp_pop_popup_content', $popup->post_content );
 		$template         = $this->locate_popup_template( $id );
 
 		include $template; // phpcs:ignore WPThemeReview.CoreFunctionality.FileInclude.FileIncludeFound
