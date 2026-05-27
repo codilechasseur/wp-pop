@@ -23,14 +23,16 @@ import {
 	RangeControl as BaseRangeControl,
 	TextareaControl,
 	Button,
+	Modal,
 	PanelRow,
 	__experimentalInputControl as InputControl,
 } from '@wordpress/components';
+import { BlockPreview } from '@wordpress/block-editor';
 const TextControl  = ( props ) => <BaseTextControl  __next40pxDefaultSize { ...props } />;
 const SelectControl = ( props ) => <BaseSelectControl __next40pxDefaultSize { ...props } />;
 const RangeControl  = ( props ) => <BaseRangeControl  __next40pxDefaultSize { ...props } />;
 import { __, sprintf } from '@wordpress/i18n';
-import { Fragment, useState } from '@wordpress/element';
+import { Fragment, useState, useEffect } from '@wordpress/element';
 
 const {
 	postTypes      = [],
@@ -47,6 +49,213 @@ const {
 	visitorOptions   = [],
 	loggedInOptions  = [],
 } = window.wpPopEditor || {};
+
+// ---- Utilities -------------------------------------------------------------
+
+function hexToRgba( hex, alpha ) {
+	const clean = ( hex || '#000000' ).replace( '#', '' );
+	const r = parseInt( clean.substring( 0, 2 ), 16 ) || 0;
+	const g = parseInt( clean.substring( 2, 4 ), 16 ) || 0;
+	const b = parseInt( clean.substring( 4, 6 ), 16 ) || 0;
+	return `rgba(${ r },${ g },${ b },${ alpha })`;
+}
+
+/**
+ * Build CSS that transforms the editor canvas iframe to look like the popup.
+ * Injected dynamically so it updates live as settings change.
+ */
+function buildCanvasCSS( { popupType, borderRadius, padding, width, overlay, overlayColor, showClose, closeColor } ) {
+	const overlayBg = overlay ? hexToRgba( overlayColor, 0.65 ) : 'transparent';
+
+	let bodyCSS    = '';
+	let dialogCSS  = '';
+
+	switch ( popupType ) {
+		case 'top_bar':
+			bodyCSS   = `background:#f0f0f0!important;margin:0;`;
+			dialogCSS = `width:100%!important;max-width:100%!important;margin:0!important;border-radius:0!important;box-shadow:0 2px 8px rgba(0,0,0,.2)!important;`;
+			break;
+		case 'bottom_bar':
+			bodyCSS   = `background:#f0f0f0!important;margin:0;min-height:100vh;display:flex!important;flex-direction:column!important;`;
+			dialogCSS = `width:100%!important;max-width:100%!important;margin:auto 0 0!important;border-radius:0!important;box-shadow:0 -2px 8px rgba(0,0,0,.2)!important;`;
+			break;
+		case 'slide_in_tl':
+			bodyCSS   = `background:#f0f0f0!important;margin:0;min-height:100vh;display:flex!important;align-items:flex-start!important;justify-content:flex-start!important;padding:1.5rem!important;box-sizing:border-box;`;
+			dialogCSS = `width:min(360px,100%)!important;max-width:360px!important;margin:0!important;border-radius:${ borderRadius }px!important;box-shadow:0 8px 24px rgba(0,0,0,.25)!important;`;
+			break;
+		case 'slide_in_tr':
+			bodyCSS   = `background:#f0f0f0!important;margin:0;min-height:100vh;display:flex!important;align-items:flex-start!important;justify-content:flex-end!important;padding:1.5rem!important;box-sizing:border-box;`;
+			dialogCSS = `width:min(360px,100%)!important;max-width:360px!important;margin:0!important;border-radius:${ borderRadius }px!important;box-shadow:0 8px 24px rgba(0,0,0,.25)!important;`;
+			break;
+		case 'slide_in_bl':
+			bodyCSS   = `background:#f0f0f0!important;margin:0;min-height:100vh;display:flex!important;align-items:flex-end!important;justify-content:flex-start!important;padding:1.5rem!important;box-sizing:border-box;`;
+			dialogCSS = `width:min(360px,100%)!important;max-width:360px!important;margin:0!important;border-radius:${ borderRadius }px!important;box-shadow:0 8px 24px rgba(0,0,0,.25)!important;`;
+			break;
+		case 'slide_in_br':
+			bodyCSS   = `background:#f0f0f0!important;margin:0;min-height:100vh;display:flex!important;align-items:flex-end!important;justify-content:flex-end!important;padding:1.5rem!important;box-sizing:border-box;`;
+			dialogCSS = `width:min(360px,100%)!important;max-width:360px!important;margin:0!important;border-radius:${ borderRadius }px!important;box-shadow:0 8px 24px rgba(0,0,0,.25)!important;`;
+			break;
+		case 'fullscreen':
+			bodyCSS   = `background:${ overlayBg }!important;margin:0;min-height:100vh;`;
+			dialogCSS = `width:100%!important;max-width:100%!important;margin:0!important;border-radius:0!important;min-height:100vh!important;`;
+			break;
+		default: // modal + tooltip
+			bodyCSS   = `background:${ overlayBg }!important;margin:0;min-height:100vh;`;
+			dialogCSS = `max-width:${ width };margin:3rem auto!important;border-radius:${ borderRadius }px!important;box-shadow:0 20px 40px rgba(0,0,0,.2)!important;`;
+	}
+
+	return `
+		body { ${ bodyCSS } }
+		.is-root-container {
+			position:relative!important;
+			background:#fff!important;
+			padding:${ padding }!important;
+			${ dialogCSS }
+		}
+		${ showClose ? `
+		.is-root-container::after {
+			content:'\\00D7';
+			position:absolute;
+			top:.4rem;right:.75rem;
+			font-size:1.5rem;line-height:1;
+			color:${ closeColor };
+			pointer-events:none;
+		}` : '' }
+		/* Cover image fix inside columns */
+		.is-root-container .wp-block-columns { align-items:stretch; gap:0!important; }
+		.is-root-container .wp-block-column:has(> .wp-block-image:only-child),
+		.is-root-container .wp-block-column:has(> figure.wp-block-image:only-child),
+		.is-root-container .wp-block-column:has(> .wp-block-cover:only-child) {
+			overflow:hidden; padding:0!important;
+		}
+		.is-root-container .wp-block-column:has(> .wp-block-image:only-child) figure,
+		.is-root-container .wp-block-column:has(> figure.wp-block-image:only-child) { height:100%;width:100%;margin:0; }
+		.is-root-container .wp-block-column:has(> .wp-block-image:only-child) img,
+		.is-root-container .wp-block-column:has(> figure.wp-block-image:only-child) img { height:100%;width:100%;object-fit:cover;display:block; }
+		.is-root-container .wp-block-column:has(> .wp-block-cover:only-child) > .wp-block-cover { height:100%;min-height:unset!important; }
+	`;
+}
+
+// ---- Canvas Style Injector -------------------------------------------------
+
+/**
+ * Invisible component that injects popup-preview CSS into the editor iframe.
+ * Re-runs whenever any appearance setting changes.
+ */
+function PopupCanvasStyleInjector() {
+	const { get } = useMeta();
+
+	const popupType    = get( '_wp_pop_popup_type', 'modal' );
+	const borderRadius = Number( get( '_wp_pop_border_radius', 4 ) );
+	const padding      = get( '_wp_pop_padding', '20px' );
+	const width        = get( '_wp_pop_width', '600px' );
+	const overlay      = !! get( '_wp_pop_overlay', true );
+	const overlayColor = get( '_wp_pop_overlay_color', '#000000' );
+	const showClose    = !! get( '_wp_pop_show_close_button', true );
+	const closeColor   = get( '_wp_pop_close_color', '#333333' );
+
+	useEffect( () => {
+		const css = buildCanvasCSS( { popupType, borderRadius, padding, width, overlay, overlayColor, showClose, closeColor } );
+		const STYLE_ID = 'wp-pop-canvas-preview';
+
+		function doInject( doc ) {
+			if ( ! doc?.head ) return false;
+			let el = doc.getElementById( STYLE_ID );
+			if ( ! el ) {
+				el = doc.createElement( 'style' );
+				el.id = STYLE_ID;
+				doc.head.appendChild( el );
+			}
+			el.textContent = css;
+			return true;
+		}
+
+		function tryInject() {
+			const iframe =
+				document.querySelector( 'iframe[name="editor-canvas"]' ) ||
+				document.querySelector( '.editor-canvas__iframe' );
+			if ( ! iframe ) return false;
+			const doc = iframe.contentDocument || iframe.contentWindow?.document;
+			if ( doInject( doc ) ) return true;
+			// Iframe exists but not ready yet — listen for its load event.
+			iframe.addEventListener( 'load', () => doInject( iframe.contentDocument || iframe.contentWindow?.document ), { once: true } );
+			return true;
+		}
+
+		if ( tryInject() ) return;
+
+		// Iframe not in DOM yet — watch for it.
+		const mo = new MutationObserver( () => { if ( tryInject() ) mo.disconnect(); } );
+		mo.observe( document.body, { childList: true, subtree: true } );
+		return () => mo.disconnect();
+	}, [ popupType, borderRadius, padding, width, overlay, overlayColor, showClose, closeColor ] );
+
+	return null;
+}
+
+// ---- Popup Preview Modal ---------------------------------------------------
+
+function PopupPreviewModal( { onClose } ) {
+	const { get } = useMeta();
+	const blocks = useSelect( ( select ) => select( 'core/block-editor' ).getBlocks() );
+
+	const popupType    = get( '_wp_pop_popup_type', 'modal' );
+	const borderRadius = Number( get( '_wp_pop_border_radius', 4 ) );
+	const padding      = get( '_wp_pop_padding', '20px' );
+	const width        = get( '_wp_pop_width', '600px' );
+	const overlay      = !! get( '_wp_pop_overlay', true );
+	const overlayColor = get( '_wp_pop_overlay_color', '#000000' );
+	const showClose    = !! get( '_wp_pop_show_close_button', true );
+	const closeColor   = get( '_wp_pop_close_color', '#333333' );
+
+	const overlayBg     = overlay ? hexToRgba( overlayColor, 0.65 ) : 'transparent';
+	const viewportWidth = parseInt( width, 10 ) || 600;
+
+	const isBar      = popupType === 'top_bar' || popupType === 'bottom_bar';
+	const isSlideIn  = popupType.startsWith( 'slide_in' );
+	const isFullscreen = popupType === 'fullscreen';
+
+	const dialogStyle = {
+		borderRadius    : isBar || isFullscreen ? 0 : `${ borderRadius }px`,
+		padding,
+		boxShadow       : isBar
+			? ( popupType === 'top_bar' ? '0 2px 8px rgba(0,0,0,.2)' : '0 -2px 8px rgba(0,0,0,.2)' )
+			: isSlideIn ? '0 8px 24px rgba(0,0,0,.25)'
+			: isFullscreen ? 'none'
+			: '0 20px 40px rgba(0,0,0,.2)',
+		maxWidth        : isBar || isFullscreen ? '100%' : isSlideIn ? '360px' : width,
+		width           : isBar || isFullscreen ? '100%' : undefined,
+		position        : 'relative',
+		background      : '#fff',
+		overflow        : 'hidden',
+	};
+
+	return (
+		<Modal
+			title={ __( 'Popup preview', 'wp-pop' ) }
+			onRequestClose={ onClose }
+			isFullScreen
+			className="wp-pop-preview-modal"
+		>
+			<div
+				className={ `wp-pop-preview-scene wp-pop-preview-scene--${ popupType }` }
+				style={ { '--wp-pop-preview-overlay': overlayBg } }
+			>
+				<div className="wp-pop-preview-dialog" style={ dialogStyle }>
+					{ showClose && (
+						<span className="wp-pop-preview-close" style={ { color: closeColor } }>
+							{ '\u00D7' }
+						</span>
+					) }
+					<BlockPreview
+						blocks={ blocks }
+						viewportWidth={ isBar || isFullscreen ? 1200 : isSlideIn ? 360 : viewportWidth }
+					/>
+				</div>
+			</div>
+		</Modal>
+	);
+}
 
 // ---- Hook helper -----------------------------------------------------------
 
@@ -353,6 +562,7 @@ function TriggerFrequencyPanel() {
 
 function AppearancePanel() {
 	const { get, set } = useMeta();
+	const [ showPreview, setShowPreview ] = useState( false );
 
 	return (
 		<PluginDocumentSettingPanel
@@ -360,6 +570,16 @@ function AppearancePanel() {
 			title={ __( 'Appearance', 'wp-pop' ) }
 			initialOpen={ false }
 		>
+			{ showPreview && <PopupPreviewModal onClose={ () => setShowPreview( false ) } /> }
+
+			<Button
+				variant="secondary"
+				style={ { width: '100%', marginBottom: '12px', justifyContent: 'center' } }
+				onClick={ () => setShowPreview( true ) }
+			>
+				{ __( 'Preview popup', 'wp-pop' ) }
+			</Button>
+
 			<SelectControl
 				label={ __( 'Popup type', 'wp-pop' ) }
 				value={ get( '_wp_pop_popup_type', 'modal' ) }
@@ -598,6 +818,7 @@ function WpPopSettings() {
 
 	return (
 		<Fragment>
+			<PopupCanvasStyleInjector />
 			<TargetingPanel />
 			<GeoTargetingPanel />
 			<SchedulePanel />

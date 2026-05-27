@@ -228,3 +228,82 @@
 	color: #fff;
 	cursor: pointer;
 }
+
+/* ==========================================================================
+   Cover image fix — Columns block inside a popup
+   ========================================================================== */
+
+/* Stretch all columns to the tallest sibling height */
+.wp-pop__content .wp-block-columns {
+	align-items: stretch;
+	gap: 0 !important;
+}
+
+/*
+ * When a column contains nothing but an Image block or a Cover block,
+ * strip its padding and make the media fill the column edge-to-edge.
+ */
+.wp-pop__content .wp-block-column:has(> .wp-block-image:only-child),
+.wp-pop__content .wp-block-column:has(> figure.wp-block-image:only-child),
+.wp-pop__content .wp-block-column:has(> .wp-block-cover:only-child) {
+	overflow: hidden;
+	padding: 0 !important;
+}
+
+/* Image block: make the <figure> and <img> fill 100% column height */
+.wp-pop__content .wp-block-column:has(> .wp-block-image:only-child) figure,
+.wp-pop__content .wp-block-column:has(> figure.wp-block-image:only-child) {
+	height: 100%;
+	width: 100%;
+	margin: 0;
+}
+
+.wp-pop__content .wp-block-column:has(> .wp-block-image:only-child) img,
+.wp-pop__content .wp-block-column:has(> figure.wp-block-image:only-child) img {
+	height: 100%;
+	width: 100%;
+	object-fit: cover;
+	display: block;
+}
+
+/* Cover block: remove the fixed min-height so it stretches with the column */
+.wp-pop__content .wp-block-column:has(> .wp-block-cover:only-child) > .wp-block-cover {
+	height: 100%;
+	min-height: unset !important;
+}
+
+/*
+ * Edge-bleed layout: when the entire popup body is a single Columns block
+ * (the typical "image left, text right" modal), pull the columns flush with
+ * the dialog border so the image bleeds to the rounded corners.
+ */
+.wp-pop__dialog:has(.wp-pop__content > .wp-block-columns:only-child) {
+	padding: 0;
+	overflow: hidden; /* honour border-radius */
+}
+
+.wp-pop__dialog:has(.wp-pop__content > .wp-block-columns:only-child) .wp-pop__inner {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+}
+
+.wp-pop__dialog:has(.wp-pop__content > .wp-block-columns:only-child) .wp-pop__content {
+	flex: 1;
+}
+
+.wp-pop__dialog:has(.wp-pop__content > .wp-block-columns:only-child) .wp-block-columns {
+	height: 100%;
+	margin: 0 !important;
+}
+
+/* Give the text column(s) the dialog padding back */
+.wp-pop__dialog:has(.wp-pop__content > .wp-block-columns:only-child)
+.wp-block-column:not(:has(> .wp-block-image)):not(:has(> .wp-block-cover)) {
+	padding: var(--wp-pop-dialog-padding, 2rem) !important;
+}
+
+/* Keep the close button on top of the image */
+.wp-pop__dialog:has(.wp-pop__content > .wp-block-columns:only-child) .wp-pop__close {
+	z-index: 10;
+}
