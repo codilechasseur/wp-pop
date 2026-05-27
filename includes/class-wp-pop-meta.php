@@ -224,7 +224,7 @@ class Wp_Pop_Meta {
 				'default'           => $default,
 				'show_in_rest'      => true,
 				'auth_callback'     => $auth,
-				'sanitize_callback' => 'floatval',
+				'sanitize_callback' => array( __CLASS__, 'sanitize_float' ),
 			)
 		);
 	}
@@ -277,6 +277,10 @@ class Wp_Pop_Meta {
 	public static function sanitize_time( $value ) {
 		$time = sanitize_text_field( $value );
 		return preg_match( '/^\d{2}:\d{2}$/', $time ) ? $time : '';
+	}
+
+	public static function sanitize_float( $value ) {
+		return floatval( $value );
 	}
 
 	public static function sanitize_json_string( $value ) {
