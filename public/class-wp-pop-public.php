@@ -17,6 +17,9 @@ class Wp_Pop_Public {
 
 	protected $version;
 
+	/** @var WP_Post[]|null Cached active popups for the current request. */
+	private $active_popups_cache = null;
+
 	public function __construct( $plugin_name, $version ) {
 		$this->plugin_name = $plugin_name;
 		$this->version     = $version;
@@ -34,12 +37,7 @@ $this->plugin_name,
 
 	public function enqueue_scripts() {
 		// Only enqueue the view module when there are active popups on this page.
-		if ( class_exists( 'Wp_Pop_Targeting' ) ) {
-			$targeting = new Wp_Pop_Targeting();
-			$active    = $targeting->get_active_popups_for_current_page();
-		} else {
-			$active = array();
-		}
+		$active = $this->resolve_active_popups();
 
 		if ( empty( $active ) ) {
 			return;
@@ -108,12 +106,7 @@ $this->plugin_name,
 	 * can pick one and keep the other dormant).
 	 */
 	public function render_popups() {
-		if ( class_exists( 'Wp_Pop_Targeting' ) ) {
-			$targeting = new Wp_Pop_Targeting();
-			$popups    = $targeting->get_active_popups_for_current_page();
-		} else {
-			$popups = $this->get_active_popups_for_current_page();
-		}
+		$popups = $this->resolve_active_popups();
 
 		// Expand list with A/B test variants.
 		$ab_testing = new Wp_Pop_Ab_Testing();
@@ -122,6 +115,28 @@ $this->plugin_name,
 		foreach ( $entries as $entry ) {
 			$this->render_popup( $entry['popup'], $entry['ab_context'] );
 		}
+	}
+
+	/**
+	 * Returns active popups for the current page, cached per request.
+	 * Uses the full targeting engine (geo, role, device) when available,
+	 * otherwise falls back to the basic scope/schedule check.
+	 *
+	 * @return WP_Post[]
+	 */
+	private function resolve_active_popups() {
+		if ( null !== $this->active_popups_cache ) {
+			return $this->active_popups_cache;
+		}
+
+		if ( class_exists( 'Wp_Pop_Targeting' ) ) {
+			$targeting                 = new Wp_Pop_Targeting();
+			$this->active_popups_cache = $targeting->get_active_popups_for_current_page();
+		} else {
+			$this->active_popups_cache = $this->get_active_popups_for_current_page();
+		}
+
+		return $this->active_popups_cache;
 	}
 
 	/**

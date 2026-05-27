@@ -169,7 +169,7 @@ class Wp_Pop_Targeting {
 		if ( 'post_type' === $scope ) {
 			$types   = (array) get_post_meta( $id, '_wp_pop_target_post_types', true );
 			$current = get_post_type();
-			return empty( $types ) || in_array( $current, $types, false );
+			return empty( $types ) || in_array( $current, $types, true );
 		}
 
 		// Taxonomy/term matching.

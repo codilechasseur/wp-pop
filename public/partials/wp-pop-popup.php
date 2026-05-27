@@ -48,7 +48,7 @@ $show_close_button = $context['showCloseButton'] ?? true;
 				type="button"
 				aria-label="<?php esc_attr_e( 'Close popup', 'wp-pop' ); ?>"
 				data-wp-on--click="actions.close"
-			>&times;</button>
+			><span aria-hidden="true">&times;</span></button>
 			<?php endif; ?>
 
 			<h2 class="wp-pop__title" id="<?php echo esc_attr( $popup_element_id ); ?>-title">

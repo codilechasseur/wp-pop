@@ -36,17 +36,6 @@ if ( ! defined( 'WPINC' ) ) {
 			'post_status'    => array( 'publish', 'draft', 'wp_pop_archived' ),
 			'fields'         => 'ids',
 		) );
-		$export_url = wp_nonce_url(
-			add_query_arg(
-				array_merge(
-					array( 'action' => 'wp_pop_export' ),
-					array_map( function( $id ) { return $id; }, $all_popups ? array_fill_keys( array_map( function( $id ) { return 'popup_ids[]'; }, $all_popups ), $all_popups ) : array() )
-				),
-				admin_url( 'admin.php' )
-			),
-			'wp_pop_export'
-		);
-		// Simpler URL construction for multiple popup_ids.
 		$export_base = admin_url( 'admin.php?action=wp_pop_export' );
 		foreach ( (array) $all_popups as $pid ) {
 			$export_base .= '&popup_ids[]=' . absint( $pid );

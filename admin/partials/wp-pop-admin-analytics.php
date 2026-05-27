@@ -12,11 +12,12 @@ if ( ! defined( 'WPINC' ) ) {
 
 $analytics = new Wp_Pop_Analytics();
 $summary   = $analytics->get_summary();
-$per_popup = $analytics->get_per_popup_summary( 30 );
 
 // Date range (default last 30 days).
 $range = isset( $_GET['range'] ) ? absint( $_GET['range'] ) : 30; // phpcs:ignore WordPress.Security.NonceVerification
 $range = in_array( $range, array( 7, 30, 90 ), true ) ? $range : 30;
+
+$per_popup = $analytics->get_per_popup_summary( $range );
 
 // Selected popup for chart.
 $chart_popup_id = isset( $_GET['popup_id'] ) ? absint( $_GET['popup_id'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification
@@ -120,21 +121,22 @@ wp_enqueue_script(
 				<?php submit_button( __( 'Update', 'wp-pop' ), 'secondary', 'submit', false ); ?>
 			</form>
 		</div>
-		<canvas id="wp-pop-chart" height="100"></canvas>
+		<canvas id="wp-pop-chart" height="100" role="img" aria-label="<?php esc_attr_e( 'Popup performance chart', 'wp-pop' ); ?>"></canvas>
 	</div>
 
 	<!-- Per-popup breakdown -->
 	<?php if ( ! empty( $per_popup ) ) : ?>
-	<h2><?php esc_html_e( 'Per-Popup Summary (Last 30 days)', 'wp-pop' ); ?></h2>
+	<h2><?php printf( /* translators: %d: number of days */ esc_html__( 'Per-Popup Summary (Last %d days)', 'wp-pop' ), $range ); ?></h2>
 	<table class="widefat fixed striped">
+		<caption class="screen-reader-text"><?php esc_html_e( 'Per-popup analytics summary', 'wp-pop' ); ?></caption>
 		<thead>
 			<tr>
-				<th><?php esc_html_e( 'Popup', 'wp-pop' ); ?></th>
-				<th><?php esc_html_e( 'Views', 'wp-pop' ); ?></th>
-				<th><?php esc_html_e( 'Clicks', 'wp-pop' ); ?></th>
-				<th><?php esc_html_e( 'Dismissals', 'wp-pop' ); ?></th>
-				<th><?php esc_html_e( 'CTR', 'wp-pop' ); ?></th>
-				<th><?php esc_html_e( 'Subscribers', 'wp-pop' ); ?></th>
+				<th scope="col"><?php esc_html_e( 'Popup', 'wp-pop' ); ?></th>
+				<th scope="col"><?php esc_html_e( 'Views', 'wp-pop' ); ?></th>
+				<th scope="col"><?php esc_html_e( 'Clicks', 'wp-pop' ); ?></th>
+				<th scope="col"><?php esc_html_e( 'Dismissals', 'wp-pop' ); ?></th>
+				<th scope="col"><?php esc_html_e( 'CTR', 'wp-pop' ); ?></th>
+				<th scope="col"><?php esc_html_e( 'Subscribers', 'wp-pop' ); ?></th>
 			</tr>
 		</thead>
 		<tbody>
@@ -146,7 +148,7 @@ wp_enqueue_script(
 					<details style="margin-top:4px">
 						<summary style="cursor:pointer;color:#0073aa"><?php esc_html_e( 'A/B variants', 'wp-pop' ); ?></summary>
 						<table style="margin-top:4px;width:100%">
-							<thead><tr><th><?php esc_html_e( 'Variant', 'wp-pop' ); ?></th><th>Views</th><th>Clicks</th><th>CTR</th></tr></thead>
+						<thead><tr><th scope="col"><?php esc_html_e( 'Variant', 'wp-pop' ); ?></th><th scope="col"><?php esc_html_e( 'Views', 'wp-pop' ); ?></th><th scope="col"><?php esc_html_e( 'Clicks', 'wp-pop' ); ?></th><th scope="col"><?php esc_html_e( 'CTR', 'wp-pop' ); ?></th></tr></thead>
 							<tbody>
 								<?php foreach ( $row['variants'] as $v ) : ?>
 								<tr>

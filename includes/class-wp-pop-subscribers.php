@@ -41,6 +41,15 @@ class Wp_Pop_Subscribers {
 			wp_send_json_error( array( 'message' => __( 'Invalid popup.', 'wp-pop' ) ), 400 );
 		}
 
+		// Basic rate limiting: max 10 subscribe attempts per IP per minute.
+		$ip       = sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ?? '' ) );
+		$rate_key = 'wp_pop_rate_sub_' . md5( $ip );
+		$count    = (int) get_transient( $rate_key );
+		if ( $count >= 10 ) {
+			wp_send_json_error( array( 'message' => __( 'Too many requests. Please try again later.', 'wp-pop' ) ), 429 );
+		}
+		set_transient( $rate_key, $count + 1, MINUTE_IN_SECONDS );
+
 		$result = $this->subscribe( $email, $name, $popup_id );
 
 		if ( is_wp_error( $result ) ) {
@@ -56,7 +65,7 @@ class Wp_Pop_Subscribers {
 			$success_msg = __( 'Thank you for subscribing!', 'wp-pop' );
 		}
 
-		wp_send_json_success( array( 'message' => esc_html( $success_msg ) ) );
+		wp_send_json_success( array( 'message' => $success_msg ) );
 	}
 
 	// -------------------------------------------------------------------------

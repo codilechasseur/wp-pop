@@ -45,6 +45,15 @@ class Wp_Pop_Analytics {
 			wp_send_json_error( 'invalid_popup', 400 );
 		}
 
+		// Basic rate limiting: max 60 tracking events per IP per minute.
+		$ip       = sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ?? '' ) );
+		$rate_key = 'wp_pop_rate_track_' . md5( $ip );
+		$count    = (int) get_transient( $rate_key );
+		if ( $count >= 60 ) {
+			wp_send_json_error( 'rate_limited', 429 );
+		}
+		set_transient( $rate_key, $count + 1, MINUTE_IN_SECONDS );
+
 		$this->record_event( $popup_id, $variant_id, $event_type );
 		wp_send_json_success();
 	}
@@ -55,6 +64,8 @@ class Wp_Pop_Analytics {
 
 	/**
 	 * Inserts or increments the event counter for today.
+	 * Uses a single atomic INSERT ... ON DUPLICATE KEY UPDATE to avoid
+	 * the race condition present in a SELECT + INSERT/UPDATE pattern.
 	 *
 	 * @param int    $popup_id
 	 * @param string $variant_id
@@ -66,38 +77,18 @@ class Wp_Pop_Analytics {
 		$table = $wpdb->prefix . 'wp_pop_events';
 		$today = current_time( 'Y-m-d' );
 
-		// phpcs:disable WordPress.DB.DirectDatabaseQuery
-		$existing = $wpdb->get_var(
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$wpdb->query(
 			$wpdb->prepare(
-				"SELECT id FROM $table WHERE popup_id=%d AND variant_id=%s AND event_type=%s AND event_date=%s",
+				"INSERT INTO $table (popup_id, variant_id, event_type, event_date, count)
+				 VALUES (%d, %s, %s, %s, 1)
+				 ON DUPLICATE KEY UPDATE count = count + 1",
 				$popup_id,
 				$variant_id,
 				$event_type,
 				$today
 			)
 		);
-
-		if ( $existing ) {
-			$wpdb->query(
-				$wpdb->prepare(
-					"UPDATE $table SET count = count + 1 WHERE id=%d",
-					(int) $existing
-				)
-			);
-		} else {
-			$wpdb->insert(
-				$table,
-				array(
-					'popup_id'   => $popup_id,
-					'variant_id' => $variant_id,
-					'event_type' => $event_type,
-					'event_date' => $today,
-					'count'      => 1,
-				),
-				array( '%d', '%s', '%s', '%s', '%d' )
-			);
-		}
-		// phpcs:enable
 	}
 
 	/**
@@ -203,8 +194,11 @@ class Wp_Pop_Analytics {
 	/**
 	 * Per-popup summary table data including A/B variant breakdown.
 	 *
+	 * Returns an array of rows with keys: popup_id, title, views, clicks,
+	 * dismissals, ctr, subscribes, variants[].
+	 *
 	 * @param int $days
-	 * @return array[]  Array of popup rows.
+	 * @return array[]
 	 */
 	public function get_per_popup_summary( $days = 30 ) {
 		global $wpdb;
@@ -222,37 +216,71 @@ class Wp_Pop_Analytics {
 				$from
 			)
 		);
+
+		// Subscriber counts per popup.
+		$sub_table = $wpdb->prefix . 'wp_pop_subscribers';
+		$sub_rows  = $wpdb->get_results(
+			"SELECT popup_id, COUNT(*) AS total FROM $sub_table GROUP BY popup_id"
+		);
 		// phpcs:enable
+
+		$sub_map = array();
+		foreach ( (array) $sub_rows as $s ) {
+			$sub_map[ (int) $s->popup_id ] = (int) $s->total;
+		}
 
 		$popups = array();
 		foreach ( (array) $rows as $row ) {
 			$pid = (int) $row->popup_id;
 			$vid = $row->variant_id;
 			if ( ! isset( $popups[ $pid ] ) ) {
-				$post              = get_post( $pid );
-				$popups[ $pid ]    = array(
-					'id'       => $pid,
-					'title'    => $post ? $post->post_title : "#{$pid}",
-					'variants' => array(),
-					'totals'   => array( 'views' => 0, 'clicks' => 0, 'dismissals' => 0 ),
+				$post           = get_post( $pid );
+				$popups[ $pid ] = array(
+					'popup_id'   => $pid,
+					'title'      => $post ? $post->post_title : "#{$pid}",
+					'variants'   => array(),
+					'views'      => 0,
+					'clicks'     => 0,
+					'dismissals' => 0,
+					'ctr'        => 0,
+					'subscribes' => $sub_map[ $pid ] ?? 0,
 				);
 			}
 			if ( ! isset( $popups[ $pid ]['variants'][ $vid ] ) ) {
-				$popups[ $pid ]['variants'][ $vid ] = array( 'views' => 0, 'clicks' => 0, 'dismissals' => 0 );
+				$popups[ $pid ]['variants'][ $vid ] = array(
+					'variant_id' => $vid,
+					'views'      => 0,
+					'clicks'     => 0,
+					'dismissals' => 0,
+					'ctr'        => 0,
+				);
 			}
-			switch ( $row->event_type ) {
-				case 'view':    $popups[ $pid ]['variants'][ $vid ]['views']++; break;
-				case 'click':   $popups[ $pid ]['variants'][ $vid ]['clicks']++; break;
-				case 'dismiss': $popups[ $pid ]['variants'][ $vid ]['dismissals']++; break;
-			}
-			// Rollup into totals.
 			$total = (int) $row->total;
 			switch ( $row->event_type ) {
-				case 'view':    $popups[ $pid ]['totals']['views']      += $total; break;
-				case 'click':   $popups[ $pid ]['totals']['clicks']     += $total; break;
-				case 'dismiss': $popups[ $pid ]['totals']['dismissals'] += $total; break;
+				case 'view':
+					$popups[ $pid ]['views']                         += $total;
+					$popups[ $pid ]['variants'][ $vid ]['views']     += $total;
+					break;
+				case 'click':
+					$popups[ $pid ]['clicks']                        += $total;
+					$popups[ $pid ]['variants'][ $vid ]['clicks']    += $total;
+					break;
+				case 'dismiss':
+					$popups[ $pid ]['dismissals']                        += $total;
+					$popups[ $pid ]['variants'][ $vid ]['dismissals']    += $total;
+					break;
 			}
 		}
+
+		// Compute CTR for popups and each variant.
+		foreach ( $popups as &$p ) {
+			$p['ctr'] = $p['views'] ? round( ( $p['clicks'] / $p['views'] ) * 100, 1 ) : 0;
+			foreach ( $p['variants'] as &$v ) {
+				$v['ctr'] = $v['views'] ? round( ( $v['clicks'] / $v['views'] ) * 100, 1 ) : 0;
+			}
+			unset( $v );
+		}
+		unset( $p );
 
 		return array_values( $popups );
 	}

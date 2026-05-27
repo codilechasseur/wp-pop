@@ -60,7 +60,9 @@ class Wp_Pop_Geo {
 		}
 
 		// Fall back to the direct connection address (may be private/loopback).
-		return sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ?? '' ) ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput
+		$remote = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput
+		// Return as-is even if private/reserved so the caller can decide how to handle it.
+		return filter_var( $remote, FILTER_VALIDATE_IP ) ? $remote : '';
 	}
 
 	/**

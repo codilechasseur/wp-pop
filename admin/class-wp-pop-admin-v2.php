@@ -1121,6 +1121,18 @@ class Wp_Pop_Admin {
 		if ( empty( $_FILES['import_file']['tmp_name'] ) ) {
 			wp_send_json_error( 'no_file', 400 );
 		}
+
+		// Validate file size (max 2 MB).
+		if ( isset( $_FILES['import_file']['size'] ) && (int) $_FILES['import_file']['size'] > 2 * MB_IN_BYTES ) {
+			wp_send_json_error( 'file_too_large', 400 );
+		}
+
+		// Validate file extension.
+		$file_name = isset( $_FILES['import_file']['name'] ) ? sanitize_file_name( wp_unslash( $_FILES['import_file']['name'] ) ) : '';
+		if ( 'json' !== strtolower( pathinfo( $file_name, PATHINFO_EXTENSION ) ) ) {
+			wp_send_json_error( 'invalid_file_type', 400 );
+		}
+
 		$file    = sanitize_text_field( wp_unslash( $_FILES['import_file']['tmp_name'] ) );
 		$content = file_get_contents( $file ); // phpcs:ignore WordPress.WP.AlternativeFunctions
 		if ( ! $content ) {
@@ -1145,8 +1157,11 @@ class Wp_Pop_Admin {
 				continue;
 			}
 			foreach ( (array) ( $popup['meta'] ?? array() ) as $key => $value ) {
+				// Only import keys that belong to this plugin.
 				if ( 0 === strpos( $key, '_wp_pop_' ) ) {
-					update_post_meta( $new_id, sanitize_key( $key ), $value );
+					// Sanitize based on expected value type.
+					$sanitized = is_array( $value ) ? array_map( 'sanitize_text_field', $value ) : sanitize_textarea_field( (string) $value );
+					update_post_meta( $new_id, sanitize_key( $key ), $sanitized );
 				}
 			}
 			$created++;
