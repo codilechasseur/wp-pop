@@ -293,6 +293,7 @@ array(
 			'abWeightA'          => $ab_context['abWeightA'] ?? null,
 			'successUrl'         => $success_url,
 			'activeVariant'      => '',
+			'testMode'           => (bool) $meta( '_wp_pop_test_mode', '', false ) && current_user_can( 'manage_options' ),
 		);
 
 		$popup_element_id = 'wp-pop-' . $id;

@@ -169,8 +169,8 @@ function openPopup( popupId, ctx ) {
 	const dialog = popupRefs.get( String( popupId ) );
 	if ( ! dialog ) return;
 
-	// Frequency check.
-	if ( ! checkFrequency( popupId, ctx.frequency, ctx.retriggerMinutes ) ) {
+	// Frequency check — skipped in test mode (admin preview).
+	if ( ! ctx.testMode && ! checkFrequency( popupId, ctx.frequency, ctx.retriggerMinutes ) ) {
 		return;
 	}
 
