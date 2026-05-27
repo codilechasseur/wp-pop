@@ -47,7 +47,7 @@ class Wp_Pop_Post_Type {
 			'capability_type'    => 'post',
 			'has_archive'        => false,
 			'hierarchical'       => false,
-			'supports'           => array( 'title', 'editor' ),
+			'supports'           => array( 'title', 'editor', 'custom-fields' ),
 			'show_in_rest'       => true,
 		);
 
